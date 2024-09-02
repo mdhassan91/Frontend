@@ -1,20 +1,44 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react'
+import ManagerDashboard from './manager/ManagerDashboard'
+import axios from 'axios';
 
-const ManagerHomePage = ({ onLogout }) => {
-  const navigate = useNavigate();
+const ManagerHomePage = ({manager}) => {
+  const [users,setUsers]=useState([])
+  console.log(manager);
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch(`http://localhost:8000/user/users/${manager._id}`);
+        console.log(response);
+        const data = await response.json();
+        setUsers(data);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
 
-  const handleLogout = () => {
-    onLogout();
-    navigate('/login');
+    fetchUsers();
+  }, [manager]);
+
+ 
+  const deleteUser = async (id) => {
+    console.log(id);
+    try {
+      await axios.delete(`http://localhost:8000/user/manager/${id}`
+      );
+      setUsers(users.filter(user => user.id !== id));
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    }
   };
-
   return (
     <div>
-      <h2>Manager Home Page</h2>
-      <button onClick={handleLogout}>Logout</button>
-    </div>
-  );
-};
 
-export default ManagerHomePage;
+      <ManagerDashboard users={users} deleteUser={deleteUser}/>
+    </div>
+
+
+  )
+}
+
+export default ManagerHomePage

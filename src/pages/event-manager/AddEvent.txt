@@ -1,0 +1,182 @@
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../../axiosInstance/axiosInstance';
+
+const AddEvent = ({user}) => {
+    const [eventName, setEventName] = useState('');
+    const [eventDate, setEventDate] = useState('');
+    const [eventDetails, setEventDetails] = useState('');
+    const [genre, setGenre] = useState('');
+    const [image, setImage] = useState('');
+    const [showtimes, setShowtimes] = useState([]);
+    const [currentDate, setCurrentDate] = useState('');
+    const [currentTime, setCurrentTime] = useState('');
+    const [userData, setUserData] = useState(null);
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const response = await axiosInstance.get('/user');
+                console.log(response.data.data);
+                setUserData(user);
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        };
+
+        fetchUserData();
+    }, []);
+    console.log(user);
+    const navigate = useNavigate();
+
+    const handleAddShowtime = () => {
+        if (currentDate && currentTime) {
+            setShowtimes(prevShowtimes => [
+                ...prevShowtimes,
+                { date: currentDate, time: currentTime }
+            ]);
+            setCurrentDate('');
+            setCurrentTime('');
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        const newMovieEvent = {
+            eventName,
+            eventDate,
+            eventDetails,
+            genre,
+            eventImgUrl: image,
+            eventType: 'event',
+            acitivityType: 'Outdoor',
+            eventCategory: 'Festival',
+            showtimes,
+            Rows: 3,
+            seatsPerRow: 5,
+            eventAdmin:userData._id
+        };
+
+        console.log(newMovieEvent);
+
+        await axiosInstance.put('/event', newMovieEvent);
+        try {
+            navigate('/event-dashboard');
+        } catch (error) {
+            console.error("Error updating movie event:", error);
+        }
+    };
+
+    return (
+        <section className="text-gray-600 body-font overflow-hidden">
+            <div className="container px-5 py-24 mx-auto">
+                <div className="lg:w-4/5 mx-auto flex flex-wrap">
+                    <form onSubmit={handleSubmit} className="lg:w-1/2 w-full mx-auto">
+                        <h2 className="text-gray-900 text-3xl title-font font-medium mb-1">Add New Event</h2>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="eventName">Event Title</label>
+                            <input
+                                id="eventName"
+                                type="text"
+                                value={eventName}
+                                onChange={(e) => setEventName(e.target.value)}
+                                className="p-2 border border-gray-300 rounded w-full"
+                                required
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="eventDate">Event Date</label>
+                            <input
+                                id="eventDate"
+                                type="date"
+                                value={eventDate}
+                                onChange={(e) => setEventDate(e.target.value)}
+                                className="p-2 border border-gray-300 rounded w-full"
+                                required
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="eventDetails">Event Details</label>
+                            <textarea
+                                id="eventDetails"
+                                value={eventDetails}
+                                onChange={(e) => setEventDetails(e.target.value)}
+                                className="p-2 border border-gray-300 rounded w-full"
+                                required
+                            ></textarea>
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="genre">Genre</label>
+                            <select
+                                id="genre"
+                                value={genre}
+                                onChange={(e) => setGenre(e.target.value)}
+                                className="p-2 border border-gray-300 rounded w-full"
+                                required
+                            >
+                                <option value="" disabled>Select Genre</option>
+                                <option value="Conference">Conference</option>
+                                <option value="Exibition">Exibition</option>
+                                {/* <option value="Drama">Drama</option>
+                                <option value="Horror">Horror</option>
+                                <option value="Romance">Romance</option>
+                                <option value="Sci-Fi">Sci-Fi</option>
+                                <option value="Thriller">Thriller</option> */}
+                            </select>
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="image">Image URL</label>
+                            <input
+                                id="image"
+                                type="text"
+                                value={image}
+                                onChange={(e) => setImage(e.target.value)}
+                                className="p-2 border border-gray-300 rounded w-full"
+                                required
+                            />
+                               
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="showtimes">Showtimes</label>
+                            <div className="flex items-center mb-2">
+                                <input
+                                    type="date"
+                                    value={currentDate}
+                                    onChange={(e) => setCurrentDate(e.target.value)}
+                                    className="p-2 border border-gray-300 rounded mr-2"
+                                />
+                                <input
+                                    type="time"
+                                    value={currentTime}
+                                    onChange={(e) => setCurrentTime(e.target.value)}
+                                    className="p-2 border border-gray-300 rounded mr-2"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleAddShowtime}
+                                    className="bg-blue-500 text-white py-2 px-4 rounded"
+                                >
+                                    Add Showtime
+                                </button>
+                            </div>
+                            <div>
+                                {showtimes.map((showtime, index) => (
+                                    <span key={index} className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">
+                                        {showtime.date} {showtime.time}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                        <button type="submit" className="bg-green-500 text-white py-2 px-4 rounded">
+                            Add Event
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    );
+};
+
+export default AddEvent;

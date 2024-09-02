@@ -1,9 +1,10 @@
 import React from 'react';
 import Card from './Card';
-import { movies } from '../data/data.js';
+// import { movies } from '../data/data.js';
 import { Link } from 'react-router-dom';
 
-const Movies = () => {
+const Movies = ({movies,setMovies}) => {
+  console.log("Getting Movies...",movies);
     return (
         <>
       {/* <section className="text-gray-600 body-font">
@@ -32,11 +33,13 @@ const Movies = () => {
         <div className="flex flex-wrap -m-4">
           {movies.slice(0, 3).map(movie => (
             <Card
-              key={movie.id}
-              image={movie.image}
-              title={movie.title}
+              key={movie._id}
+              id={movie._id}
+              image={movie.eventImgUrl}
+              title={movie.eventName}
               category={movie.genre}
               description={movie.description}
+              path={`/movie/${movie._id}`}
             />
           ))}
         </div>

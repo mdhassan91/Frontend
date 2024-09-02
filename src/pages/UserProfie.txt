@@ -1,0 +1,417 @@
+import React, { useState, useEffect } from 'react';
+import axiosInstance from '../axiosInstance/axiosInstance';
+import Modal from '../components/Modal';
+import Navbar from '../components/Navbar';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+const UserProfile = ({ user }) => {
+    const [userData, setUserData] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [reservations, setReservations] = useState([]);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const response = await axiosInstance.get('/user');
+                setUserData(response.data || user);
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        };
+        fetchUserData();
+    }, [user]);
+
+    useEffect(() => {
+        const fetchReservations = async () => {
+            if (!userData || !userData._id) return;
+            try {
+                const response = await axios.get(`http://localhost:8000/reserve/${userData._id}`);
+                setReservations(Array.isArray(response.data) ? response.data : []);
+            } catch (error) {
+                console.error('Error fetching reservations:', error);
+                setReservations([]);
+            }
+        };
+        fetchReservations();
+    }, [userData]);
+
+    const handleLogout = () => {
+        localStorage.clear();
+        navigate('/login');
+    };
+
+    const handleUpdate = async (updatedData) => {
+        const newUpdatedData = {
+            Email: userData.Email,
+            Username: userData.Username,
+            Name: updatedData.name,
+            Password: updatedData.newPassword || userData.Password,
+        };
+        try {
+            await axiosInstance.post('/user', newUpdatedData);
+            setUserData(newUpdatedData);
+            setIsModalOpen(false);
+        } catch (error) {
+            console.error('Error updating user data:', error);
+        }
+    };
+
+    const handleCancel = async (reservationID, reserveSeatID = null) => {
+        const url = reserveSeatID
+            ? `http://localhost:8000/reserve/${reservationID}/${reserveSeatID}`
+            : `http://localhost:8000/reserve/${reservationID}`;
+        try {
+            const response = await axios.delete(url);
+            if (response.status === 200) {
+                if (reserveSeatID) {
+                    setReservations(prev =>
+                        prev.map(reservation =>
+                            reservation._id === reservationID
+                                ? {
+                                      ...reservation,
+                                      SeatsDetails: reservation.SeatsDetails.filter(
+                                          seat => seat.reserveSeatID !== reserveSeatID
+                                      ),
+                                  }
+                                : reservation
+                        )
+                    );
+                } else {
+                    setReservations(prev => prev.filter(reservation => reservation._id !== reservationID));
+                }
+            } else {
+                console.error('Failed to cancel:', response.data.message);
+            }
+        } catch (error) {
+            console.error('Error canceling reservation:', error);
+        }
+    };
+
+    if (!userData) {
+        return <div>Loading...</div>;
+    }
+
+    return (
+        <>
+            {/* <Navbar handleLogout={handleLogout} /> */}
+            <div className="container mx-auto p-4">
+                <h2 className="text-2xl mb-4">User Profile</h2>
+                <div>
+                    <p><strong>Name:</strong> {userData.Name}</p>
+                    <p><strong>Email:</strong> {userData.Email}</p>
+                    <p><strong>Username:</strong> {userData.Username}</p>
+                </div>
+                <button onClick={() => setIsModalOpen(true)} className="bg-indigo-500 text-white px-4 py-2 rounded mt-4">
+                    Update User Information
+                </button>
+                <div>
+                    <h3 className="text-xl mt-8">Booking History</h3>
+                    <h5 className="text-xl mt-8">Total No. of Tickets: {reservations.length}</h5>
+                    <br />
+                    <table className="min-w-full bg-white border-collapse">
+                        <thead>
+                            <tr>
+                                <th className="py-2 px-4 border-b text-left">Ticket ID</th>
+                                <th className="py-2 px-4 border-b text-left">Event Name</th>
+                                <th className="py-2 px-4 border-b text-left">Date</th>
+                                <th className="py-2 px-4 border-b text-left">Time</th>
+                                <th className="py-2 px-4 border-b text-left">Seats</th>
+                                <th className="py-2 px-4 border-b text-left">Quantity</th>
+                                <th className="py-2 px-4 border-b text-left">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {reservations.map(reservation => (
+                                <tr key={reservation._id} className="even:bg-gray-100">
+                                    <td className="py-2 px-4 border-b">{reservation._id}</td>
+                                    <td className="py-2 px-4 border-b">{reservation.eventName}</td>
+                                    <td className="py-2 px-4 border-b">{new Date(reservation.eventDate).toLocaleDateString()}</td>
+                                    <td className="py-2 px-4 border-b">{reservation.eventTime ? new Date(reservation.eventTime).toLocaleTimeString() : 'N/A'}</td>
+                                    <td className="py-2 px-4 border-b">
+                                        <ul>
+                                            {reservation.SeatsDetails.map((seat, index) => (
+                                                <li key={index}>
+                                                    Seat {seat.row}-{seat.number} (ID: {seat.reserveSeatID})
+                                                    <button
+                                                        onClick={() => handleCancel(reservation._id, seat.reserveSeatID)}
+                                                        className="bg-red-500 text-white py-1 px-2 ml-2 rounded hover:bg-red-700"
+                                                    >
+                                                        Cancel Seat
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </td>
+                                    <td className="py-2 px-4 border-b">{reservation.SeatsDetails.length}</td>
+                                    <td className="py-2 px-4 border-b">
+                                        <button
+                                            onClick={() => handleCancel(reservation._id)}
+                                            className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-700"
+                                        >
+                                            Cancel All
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                {isModalOpen && (
+                    <Modal
+                        user={userData}
+                        onClose={() => setIsModalOpen(false)}
+                        onUpdate={handleUpdate}
+                    />
+                )}
+            </div>
+        </>
+    );
+};
+
+export default UserProfile;
+
+
+//Working One 
+import React, { useState, useEffect } from 'react';
+import axiosInstance from '../axiosInstance/axiosInstance';
+import Modal from '../components/Modal';
+import Navbar from '../components/Navbar';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+const UserProfile = ({ user, onLogout }) => {
+    const [userData, setUserData] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [reservations, setReservations] = useState([]);
+
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        localStorage.clear();
+        navigate('/login');
+    };
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const response = await axiosInstance.get('/user');
+                setUserData(user);
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        };
+
+        fetchUserData();
+    }, [user]);
+
+    useEffect(() => {
+        if (userData && userData._id) {
+            const fetchReservations = async () => {
+                try {
+                    const response = await fetch(`http://localhost:8000/reserve/${userData._id}`);
+                    const data = await response.json();
+                    // Check if data is an array
+                    if (Array.isArray(data)) {
+                        console.log("Data>>>>>>>", data);
+
+                        setReservations(data);
+                    } else {
+                        setReservations([]); // Fallback to empty array
+                    }
+                } catch (error) {
+                    console.error('Error fetching reservations:', error);
+                    setReservations([]); // Fallback to empty array in case of error
+                }
+            };
+
+            fetchReservations();
+        }
+    }, [userData]);
+
+    const handleUpdate = async (updatedData) => {
+        const newUpdatedData = {
+            Email: userData.Email,
+            Username: userData.Username,
+            Name: updatedData.name,
+            Password: updatedData.newPassword ? updatedData.newPassword : userData.Password,
+        };
+
+        try {
+            await axiosInstance.post('/user', newUpdatedData);
+            setUserData(newUpdatedData);
+            setIsModalOpen(false);
+        } catch (error) {
+            console.error('Error updating user data:', error);
+        }
+    };
+
+    // const handleAllCancel = async (reservationID) => {
+    //     console.log(reservationID);
+    //     try {
+    //         const response = await axios.delete(`http://localhost:8000/reserve/${reservationID}`);
+
+    //         if (response.status === 200) {
+    //             // Remove the canceled reservation from the state
+    //             setReservations(reservations.filter(reservation => reservation._id !== reservationID));
+    //             console.log('Reservation canceled successfully');
+    //         } else {
+    //             console.error('Failed to cancel reservation:', response.data.message);
+    //         }
+    //     } catch (error) {
+    //         console.error('Error canceling reservation:', error);
+    //     }
+    // };
+    // const handleCancel = async (reservationID, reserveSeatID) => {
+    //     console.log(`Canceling seat ${reserveSeatID} from reservation ${reservationID}`);
+    //     try {
+    //         const response = await axios.delete(`http://localhost:8000/reserve/${reservationID}/${reserveSeatID}`);
+
+    //         if (response.status === 200) {
+    //             // Update the reservations state by removing the canceled seat
+    //             setReservations(reservations.map(reservation => {
+    //                 if (reservation._id === reservationID) {
+    //                     return {
+    //                         ...reservation,
+    //                         SeatsDetails: reservation.SeatsDetails.filter(seat => seat.reserveSeatID !== reserveSeatID)
+    //                     };
+    //                 }
+    //                 return reservation;
+    //             }));
+    //             console.log('Seat canceled successfully');
+    //         } else {
+    //             console.error('Failed to cancel seat:', response.data.message);
+    //         }
+    //     } catch (error) {
+    //         console.error('Error canceling seat:', error);
+    //     }
+    // };
+    const handleCancel = async (reservationID, reserveSeatID = null) => {
+        const url = reserveSeatID
+            ? `http://localhost:8000/reserve/${reservationID}/${reserveSeatID}`
+            : `http://localhost:8000/reserve/${reservationID}`;
+        try {
+            const response = await axios.delete(url);
+            if (response.status === 200) {
+                if (reserveSeatID) {
+                    setReservations(prev =>
+                        prev.map(reservation =>
+                            reservation._id === reservationID
+                                ? {
+                                    ...reservation,
+                                    SeatsDetails: reservation.SeatsDetails.filter(
+                                        seat => seat.reserveSeatID !== reserveSeatID
+                                    ),
+                                }
+                                : reservation
+                        )
+                    );
+                } else {
+                    setReservations(prev => prev.filter(reservation => reservation._id !== reservationID));
+                }
+            } else {
+                console.error('Failed to cancel:', response.data.message);
+            }
+        } catch (error) {
+            console.error('Error canceling reservation:', error);
+        }
+    };
+
+    if (!userData) {
+        return <div>Loading...</div>;
+    }
+
+    return (
+        <>
+            {/* <Navbar handleLogout={handleLogout} /> */}
+            <div className="container mx-auto p-4">
+                <h2 className="text-2xl mb-4">User Profile</h2>
+                <div>
+                    <p><strong>Name:</strong> {userData.Name}</p>
+                    <p><strong>Email:</strong> {userData.Email}</p>
+                    <p><strong>Username:</strong> {userData.Username}</p>
+                </div>
+                <button onClick={() => setIsModalOpen(true)} className="bg-indigo-500 text-white px-4 py-2 rounded mt-4">
+                    Update User Information
+                </button>
+                <div>
+                    <h3 className="text-xl mt-8">Booking History</h3>
+                    <h5 className="text-xl mt-8">Total No. of Tickets: {reservations.length}</h5>
+                    <br />
+                    <table className="min-w-full bg-white border-collapse">
+                        <thead>
+                            <tr>
+                                <th className="py-2 px-4 border-b text-left">Ticket ID</th>
+                                <th className="py-2 px-4 border-b text-left">Event Name</th>
+                                <th className="py-2 px-4 border-b text-left">Date</th>
+                                <th className="py-2 px-4 border-b text-left">Time</th>
+                                <th className="py-2 px-4 border-b text-left">Seats</th>
+                                <th className="py-2 px-4 border-b text-left">Quantity</th>
+                                <th className="py-2 px-4 border-b text-left">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {reservations.map((reservation) => (
+                                <tr key={reservation._id} className="even:bg-gray-100">
+                                    <td className="py-2 px-4 border-b">{reservation._id}</td>
+                                    <td className="py-2 px-4 border-b">{reservation.eventName}</td>
+                                    <td className="py-2 px-4 border-b">{new Date(reservation.eventDate).toLocaleDateString()}</td>
+                                    <td className="py-2 px-4 border-b">{reservation.eventTime ? new Date(reservation.eventTime).toLocaleTimeString() : 'N/A'}</td>
+                                    <td className="py-2 px-4 border-b">
+                                        <ul>
+                                            {reservation.SeatsDetails.map((seat, index) => (
+                                                // <li key={seat.reserveSeatID}>
+                                                <li key={index}>
+
+                                                    Seat {seat.row}-{seat.number} (ID: {seat.reserveSeatID})
+                                                    <button
+                                                        onClick={() => handleCancel(reservation._id, seat.reserveSeatID)}
+                                                        className="bg-red-500 text-white py-1 px-2 ml-2 rounded hover:bg-red-700"
+                                                    >
+                                                        Cancel Seat
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </td>
+                                    <td className="py-2 px-4 border-b">{reservation.SeatsDetails.length}</td>
+                                    <td className="py-2 px-4 border-b">
+                                        <button
+                                            // onClick={() => handleAllCancel(reservation._id)}
+                                            onClick={() => handleCancel(reservation._id)}
+
+                                            className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-700"
+                                        >
+                                            Cancel All
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                {isModalOpen && (
+                    <Modal
+                        user={userData}
+                        onClose={() => setIsModalOpen(false)}
+                        onUpdate={handleUpdate}
+                    />
+                )}
+            </div>
+        </>
+    );
+};
+
+
+
+
+
+
+
+
+
+export default UserProfile;
+

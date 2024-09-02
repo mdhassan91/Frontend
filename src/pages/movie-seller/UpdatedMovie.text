@@ -1,0 +1,249 @@
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import axiosInstance from '../../axiosInstance/axiosInstance';
+import axios from 'axios';
+
+const UpdateMovie = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [eventData, setEventData] = useState({
+    eventName: '',
+    eventDate: '',
+    eventDetails: '',
+    // genre: '',
+    eventImgUrl: '',
+    // showtimes: [],
+    // Seats: [],
+    // Rows: '',
+    // seatsPerRow: ''
+  });
+  const [currentDate, setCurrentDate] = useState('');
+  const [currentTime, setCurrentTime] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await axiosInstance.get(`/event/${id}`);
+      const data = response.data.data;
+      console.log(data);
+      setEventData({
+        eventName: data.eventName || '',
+        eventDate: data.eventDate ? data.eventDate.split('T')[0] : '',
+        eventDetails: data.eventDetails || '',
+        // genre: data.genre || '',
+        eventImgUrl: data.eventImgUrl || '',
+        // showtimes: data.showtimes || [],
+        // Seats: data.Seats || [],
+        // Rows: data.Rows || '',
+        // seatsPerRow: data.seatsPerRow || ''
+      });
+    } catch (error) {
+      console.error(error);
+      setError('Failed to fetch event data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [id]);
+
+  const handleAddShowtime = () => {
+    if (currentDate && currentTime) {
+      setEventData(prevEventData => ({
+        ...prevEventData,
+        showtimes: [
+          ...prevEventData.showtimes,
+          { date: currentDate, time: currentTime }
+        ]
+      }));
+      setCurrentDate('');
+      setCurrentTime('');
+    }
+  };
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setEventData({
+      ...eventData,
+      [name]: value,
+    });
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await axios.post(`http://localhost:8000/event/${id}`, eventData);
+      console.log(response.data.data);
+
+      // Handle successful update
+      navigate('/dashboard');
+    } catch (error) {
+      console.error(error);
+      setError('Failed to update event');
+    } 
+    // finally {
+    //   setIsLoading(false);
+    // }
+  };
+
+  return (
+    <section className="text-gray-600 body-font overflow-hidden">
+      <div className="container px-5 py-24 mx-auto">
+        <div className="lg:w-4/5 mx-auto flex flex-wrap">
+          <form onSubmit={handleSubmit} className="lg:w-1/2 w-full mx-auto">
+            <h2 className="text-gray-900 text-3xl title-font font-medium mb-1">Update Movie</h2>
+            {isLoading && <p>Loading...</p>}
+            {error && <p className="text-red-500">{error}</p>}
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="eventName">Movie Title</label>
+              <input
+                id="eventName"
+                type="text"
+                name="eventName"
+                value={eventData.eventName}
+                onChange={handleChange}
+                className="p-2 border border-gray-300 rounded w-full"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="eventDate">Event Date</label>
+              <input
+                id="eventDate"
+                type="date"
+                name="eventDate"
+                value={eventData.eventDate}
+                onChange={handleChange}
+                className="p-2 border border-gray-300 rounded w-full"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="eventDetails">Movie Details</label>
+              <textarea
+                id="eventDetails"
+                name="eventDetails"
+                value={eventData.eventDetails}
+                onChange={handleChange}
+                className="p-2 border border-gray-300 rounded w-full"
+                required
+              ></textarea>
+            </div>
+            {/* <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="genre">Genre</label>
+              <select
+                id="genre"
+                name="genre"
+                value={eventData.genre}
+                onChange={handleChange}
+                className="p-2 border border-gray-300 rounded w-full"
+                required
+              >
+                <option value="" disabled>Select Genre</option>
+                <option value="Action">Action</option>
+                <option value="Comedy">Comedy</option>
+                <option value="Drama">Drama</option>
+                <option value="Horror">Horror</option>
+                <option value="Romance">Romance</option>
+                <option value="Sci-Fi">Sci-Fi</option>
+                <option value="Thriller">Thriller</option>
+              </select>
+            </div> */}
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="eventImgUrl">Image URL</label>
+              <input
+                id="eventImgUrl"
+                type="text"
+                name="eventImgUrl"
+                value={eventData.eventImgUrl}
+                onChange={handleChange}
+                className="p-2 border border-gray-300 rounded w-full"
+                required
+              />
+            </div>
+            {/* <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Rows">Rows</label>
+              <input
+                id="Rows"
+                type="number"
+                name="Rows"
+                value={eventData.Rows}
+                onChange={handleChange}
+                className="p-2 border border-gray-300 rounded w-full"
+                required
+              />
+            </div> */}
+            {/* <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="seatsPerRow">Seats Per Row</label>
+              <input
+                id="seatsPerRow"
+                type="number"
+                name="seatsPerRow"
+                value={eventData.seatsPerRow}
+                onChange={handleChange}
+                className="p-2 border border-gray-300 rounded w-full"
+                required
+              />
+            </div> */}
+            <div className="mb-4">
+              {/* <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="showtimes">Showtimes</label> */}
+              {/* <div className="flex items-center mb-2">
+                <input
+                  type="date"
+                  value={currentDate}
+                  onChange={(e) => setCurrentDate(e.target.value)}
+                  className="p-2 border border-gray-300 rounded mr-2"
+                />
+                <input
+                  type="time"
+                  value={currentTime}
+                  onChange={(e) => setCurrentTime(e.target.value)}
+                  className="p-2 border border-gray-300 rounded mr-2"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddShowtime}
+                  className="bg-blue-500 text-white py-2 px-4 rounded"
+                >
+                  Add Showtime
+                </button>
+              </div> */}
+              {/* <div>
+                {eventData.showtimes.map((showtime, index) => (
+                  <span key={index} className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">
+                    {showtime.date} {showtime.time}
+                  </span>
+                ))}
+              </div> */}
+            </div>
+            {/* <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Seats">Seats</label>
+              <div>
+                {eventData.Seats.map((seat, index) => (
+                  <span key={index} className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">
+                    {JSON.stringify(seat)}
+                  </span>
+                ))}
+              </div>
+            </div> */}
+            <button type="submit" className="bg-green-500 text-white py-2 px-4 rounded">
+              Save
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default UpdateMovie;

@@ -1,0 +1,245 @@
+@import url("https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap");
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #1e1d31;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-family: "Lato", "sans-serif";
+  margin: 0;
+  padding: 10px;
+}
+
+.App {
+  text-align: center;
+  width: 100%;
+  max-width: 700px;
+  margin: auto;
+}
+
+.movie-container {
+  margin: 10px 0;
+}
+
+.showcase {
+  background-color: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 10px;
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.showcase li {
+  display: flex;
+  align-items: center;
+  margin: 0 5px;
+  font-size: 12px;
+}
+
+.showcase .seat {
+  margin-right: 5px;
+  width: 15px;
+  height: 15px;
+}
+
+.movie-container select {
+  background-color: #fff;
+  border: 0;
+  border-radius: 5px;
+  font-size: 14px;
+  margin-left: 5px;
+  padding: 5px 10px;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.container {
+  perspective: 1000px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  background-color: #2b2a3d;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.category {
+  margin: 10px 0;
+}
+
+.category h3 {
+  margin-bottom: 5px;
+  font-size: 16px;
+  color: #6feaf6;
+}
+
+.seat-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.seat {
+  background-color: #444451;
+  height: 20px;
+  width: 20px;
+  margin: 3px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 10px;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.seat.selected {
+  background-color: #6feaf6;
+}
+
+.seat.occupied {
+  background-color: #fff;
+  cursor: not-allowed;
+}
+
+.seat:hover:not(.occupied) {
+  transform: scale(1.2);
+  background-color: #575769;
+}
+
+.screen {
+  background-color: #fff;
+  width: 70%;
+  height: 40px;
+  margin: 10px 0;
+  transform: rotateX(-45deg);
+  box-shadow: 0 3px 10px rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+}
+
+p.text {
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+p.text span {
+  color: #6feaf6;
+}
+
+button {
+  background-color: #6feaf6;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: #5fd1d9;
+}
+
+/* Confirmation Modal Styles */
+.confirmCont {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #2b2a3d;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  width: 90%;
+  max-width: 450px;
+}
+
+.confirmCont .rightTopCont,
+.confirmCont .rightBottomCont {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.confirmCont .movieInfo p,
+.confirmCont .movieInfo h1 {
+  margin: 5px 0;
+}
+
+.confirmCont .movieInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.confirmCont .buttonCont {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.confirmCont button {
+  width: 48%;
+}
+
+/* Success Modal Styles */
+.modal-active {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.successModal {
+  position: relative;
+  background-color: #2b2a3d;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.successModal .modalTop img {
+  width: 50px;
+  height: 50px;
+  margin-bottom: 15px;
+}
+
+.successModal .modalCenter h1 {
+  margin-bottom: 10px;
+  font-size: 22px;
+}
+
+.successModal .modalBottom button {
+  margin-top: 15px;
+}

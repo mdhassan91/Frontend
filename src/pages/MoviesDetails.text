@@ -1,0 +1,91 @@
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
+
+const MovieDetail = ({ movies }) => {
+    const { id } = useParams();
+    const movie = movies.find(m => m._id === id);
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [selectedShowtime, setSelectedShowtime] = useState(null);
+    const navigate = useNavigate();
+
+    if (!movie) {
+        return <div>Movie not found</div>;
+    }
+
+    const handleProceedToBooking = () => {
+        if (selectedShowtime) {
+            navigate(`/booking/${id}/${selectedShowtime._id}`);
+        }
+    };
+
+    const handleDateChange = (event) => {
+        setSelectedDate(new Date(event.target.value));
+        setSelectedShowtime(null); // Reset selected showtime when date changes
+    };
+
+    const handleShowtimeSelect = (showtime) => {
+        setSelectedShowtime(showtime);
+    };
+
+    const filteredShowtimes = movie.showtimes.filter(showtime =>
+        format(new Date(showtime.showtimeDate), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
+    );
+
+    return (
+        <section className="text-gray-600 body-font overflow-hidden">
+            <div className="container px-5 py-24 mx-auto">
+                <div className="lg:w-4/5 mx-auto flex flex-wrap">
+                    <img alt={movie.eventName} className="lg:w-1/2 w-full lg:h-auto h-64 object-cover object-center rounded" src={movie.eventImgUrl} />
+                    <div className="lg:w-1/2 w-full lg:pl-10 lg:py-6 mt-6 lg:mt-0">
+                        <h2 className="text-sm title-font text-gray-500 tracking-widest">MOVIE</h2>
+                        <h1 className="text-gray-900 text-3xl title-font font-medium mb-1">{movie.eventName}</h1>
+                        <div className="flex mb-4">
+                            <span className="text-gray-600">Genre: {movie.genre}</span>
+                        </div>
+                        <p className="leading-relaxed">{movie.eventDetails}</p>
+                        <div className="mt-6 mb-5">
+                            <div className="mb-4">
+                                <h2 className="text-2xl font-medium text-gray-900 mb-2">Select Date</h2>
+                                <input 
+                                    type="date" 
+                                    value={format(selectedDate, 'yyyy-MM-dd')} 
+                                    onChange={handleDateChange}
+                                    className="border border-gray-300 rounded py-2 px-3"
+                                />
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-medium text-gray-900 mb-2">Available Showtimes</h2>
+                                <div className="flex flex-wrap">
+                                    {filteredShowtimes.length > 0 ? (
+                                        filteredShowtimes.map(showtime => (
+                                            <button 
+                                                key={showtime._id} 
+                                                onClick={() => handleShowtimeSelect(showtime)}
+                                                className={`mr-2 mb-2 py-2 px-4 rounded ${selectedShowtime && selectedShowtime._id === showtime._id ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'}`}
+                                            >
+                                                {format(new Date(showtime.showtimeDate), 'hh:mm a')}
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <p className="text-gray-500">No showtimes available for this date.</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                        {selectedShowtime && (
+                            <div className="mt-4">
+                                <p className="text-lg text-gray-900">Selected Showtime: {format(new Date(selectedShowtime.showtimeDate), 'hh:mm a')}</p>
+                                <button onClick={handleProceedToBooking} className="bg-green-500 text-white py-2 px-4 rounded mt-2">
+                                    Proceed to Booking
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+};
+
+export default MovieDetail;

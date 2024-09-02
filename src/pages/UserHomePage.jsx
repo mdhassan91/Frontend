@@ -8,19 +8,20 @@ import { movies, activities, events } from '../data/data.js';
 import LandingPage from './LandingPage';
 import Navbar from '../components/Navbar';
 
-const UserHomePage = ({ onLogout }) => {
+const UserHomePage = ({ onLogout ,movies,setMovies,events,setEvents }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
     onLogout();
+    localStorage.clear();
     navigate('/login');
   };
 
   return (
     <>
-    <Navbar handleLogout={handleLogout}/>
+    {/* <Navbar handleLogout={handleLogout}/> */}
       {/* <button onClick={handleLogout}>Logout</button> */}
-      <LandingPage/>
+      <LandingPage movies={movies} setMovies={setMovies}  events={events} setEvents={setEvents}/>
     </>
   );
 };

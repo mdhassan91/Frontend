@@ -1,18 +1,15 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import EventDashboard from './event-manager/EventDashboard'
 
-const EventManagerHomePage = ({ onLogout }) => {
-  const navigate = useNavigate();
 
-  const handleLogout = () => {
-    onLogout();
-    navigate('/login');
-  };
+const EventManagerHomePage = () => {
+  
 
   return (
     <div>
-      <h2>Event Manager Home Page</h2>
-      <button onClick={handleLogout}>Logout</button>
+    
+      {/* <button onClick={handleLogout}>Logout</button> */}
+      <EventDashboard/>
     </div>
   );
 };
